@@ -1,0 +1,26 @@
+name: Validate skills
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate each skill
+        run: |
+          set -euo pipefail
+          fail=0
+          for dir in skills/*/; do
+            [ -d "$dir" ] || continue
+            echo "::group::${dir%/}"
+            if ! python3 tools/validate_skill.py "$dir"; then
+              fail=1
+            fi
+            echo "::endgroup::"
+          done
+          exit "$fail"
