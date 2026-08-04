@@ -21,6 +21,7 @@ npx skills add artieeez/skills --skill adr-coverage -g -a cursor -y
 | Skill | What it does |
 | --- | --- |
 | [adr-coverage](skills/adr-coverage) | ADR coverage map + backlog; Design→Tasks hard-stop when gaps are missing. Hands off writing to `create-adr`. |
+| [artr-platform-ops](skills/artr-platform-ops) | Diagnose the artr personal platform (Argo CD, kubectl logs/events, deploy GitHub Actions, OCI/kube reachability). Read-only by default. |
 
 ## License
 
