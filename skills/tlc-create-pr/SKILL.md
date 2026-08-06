@@ -1,15 +1,15 @@
 ---
 name: tlc-create-pr
-description: Closes out a TLC roadmap feature by syncing ROADMAP and Mermaid /roadmap, merging main, opening a GitHub PR, then checking out the next m{N}/feature-slug branch. Use when the user says "create a PR", "open a PR", "open pr for this", "ship this feature", "PR this", "pr it", or "finish with a PR" on a repo that uses .specs/project/ROADMAP.md and AGENTS branch naming. Do NOT use for reviewing PRs (use pr-review), addressing review comments, fixing CI on an existing PR, or commits that are not meant to open a pull request.
+description: Closes out a TLC roadmap feature by syncing ROADMAP and Mermaid /roadmap, merging main, running local bin/ci (fix-and-log failures to tmp/), opening a GitHub PR only when CI is green, then checking out the next m{N}/feature-slug branch. Use when the user says "create a PR", "open a PR", "open pr for this", "ship this feature", "PR this", "pr it", or "finish with a PR" on a repo that uses .specs/project/ROADMAP.md and AGENTS branch naming. Do NOT use for reviewing PRs (use pr-review), addressing review comments, fixing CI on an existing PR, or commits that are not meant to open a pull request.
 license: CC-BY-4.0
 metadata:
   author: Artur Webber
-  version: 1.1.0
+  version: 1.2.0
 ---
 
 # TLC Create PR
 
-Sequential handoff after `tlc-spec-driven` Execute: keep ROADMAP honest, open the PR, land on the next roadmap branch. Does not replace Specify/Design/Tasks/Execute or the Verifier.
+Sequential handoff after `tlc-spec-driven` Execute: keep ROADMAP honest, prove local CI green, open the PR, land on the next roadmap branch. Does not replace Specify/Design/Tasks/Execute or the Verifier.
 
 ## Neighbor skills
 
@@ -25,7 +25,9 @@ Sequential handoff after `tlc-spec-driven` Execute: keep ROADMAP honest, open th
 2. Read `AGENTS.md` and `.specs/project/ROADMAP.md` before any git mutation.
 3. Do not mark a feature COMPLETE/DONE in ROADMAP if TLC gates are still missing (UI → automated gates + Playwright UAT per AGENTS.md).
 4. Never force-push to `main`, never skip hooks, never commit secrets.
-5. Load [references/mermaid-roadmap.md](references/mermaid-roadmap.md) only when step 2 will edit `app/views/roadmaps/show.html.erb`.
+5. Never push or `gh pr create` until local `bin/ci` exits 0.
+6. Never stage or commit `tmp/ci-failure-log.md` (or any other CI failure log under `tmp/`).
+7. Load [references/mermaid-roadmap.md](references/mermaid-roadmap.md) only when step 2 will edit `app/views/roadmaps/show.html.erb`.
 
 ## Workflow
 
@@ -38,8 +40,9 @@ TLC Create PR:
 - [ ] 2. Sync Mermaid /roadmap (if present)
 - [ ] 3. Commit pending work for this PR
 - [ ] 4. Merge origin/main into current branch
-- [ ] 5. Push + create PR
-- [ ] 6. Checkout next roadmap branch
+- [ ] 5. Local CI gate (bin/ci)
+- [ ] 6. Push + create PR
+- [ ] 7. Checkout next roadmap branch
 ```
 
 ### 0. Identify feature + gate check
@@ -57,7 +60,7 @@ Depends on: step 0 passed.
 
 Update `.specs/project/ROADMAP.md` when status is stale: mark the feature COMPLETE/DONE in the project’s existing vocabulary; refresh milestone Current/Status when the milestone boundary moves. Do not invent milestones or rewrite unrelated sections.
 
-If `.specs/project/STATE.md` or `.specs/STATE.md` has Handoff, refresh what shipped and the proposed next feature (PR URL can be filled after step 5).
+If `.specs/project/STATE.md` or `.specs/STATE.md` has Handoff, refresh what shipped and the proposed next feature (PR URL can be filled after step 6).
 
 ### 2. Sync Mermaid `/roadmap`
 
@@ -85,13 +88,53 @@ git fetch origin
 git merge origin/main
 ```
 
-On conflicts: resolve, re-run the project’s relevant tests if code conflicted, commit the merge. Never resolve by discarding the feature’s intent blindly.
+On conflicts: resolve and commit the merge. Never resolve by discarding the feature’s intent blindly. Local CI in step 5 covers re-validation after a conflicted merge.
 
 On failure you cannot resolve → stop; leave the branch as-is and report.
 
-### 5. Push + create PR
+### 5. Local CI gate (`bin/ci`)
 
-Depends on: merge succeeded.
+Depends on: merge succeeded (or was a no-op fast-forward / already up to date).
+
+Goal: the branch that will be pushed must pass the same local CI entrypoint the project uses for GitHub CI parity.
+
+1. Run full CI with the project’s Ruby toolchain (AGENTS.md: `mise`):
+
+```bash
+mise exec -- bin/ci
+```
+
+If `mise` is unavailable and the environment already uses the correct Ruby, `bin/ci` alone is acceptable — prefer `mise exec` when present.
+
+2. **On success (exit 0):** proceed to step 6. Do not create or update the failure log.
+
+3. **On failure:** do not push or open a PR. Enter the fix loop:
+
+   a. **Document** — append one entry to `tmp/ci-failure-log.md` (create the file if missing). Never stage this file. Use this shape:
+
+   ```markdown
+   ## YYYY-MM-DD HH:MM — branch `m{N}/{slug}` — FAIL
+
+   - Step: <CI step name from bin/ci output, e.g. "Style: Ruby" / "Tests: Rails">
+   - Summary: <one-line cause>
+   - Excerpt:
+     ```
+     <short relevant stderr/stdout; truncate aggressively>
+     ```
+   - Fix applied: <what you changed, or "blocked — needs human">
+   ```
+
+   b. **Fix** — address the failure surgically (rubocop, security finding, failing test, etc.). Commit the fix with a focused message (e.g. `fix: make rubocop happy before PR`).
+
+   c. **Re-run** — `mise exec -- bin/ci` again.
+
+   d. Repeat a–c until exit 0, or until blocked (unclear root cause, needs product decision, flaky infra). If blocked → stop, report the failure and point the user at `tmp/ci-failure-log.md`. Leave commits local; no push/PR.
+
+Why the log stays uncommitted: it is a personal pattern ledger for recurring CI pain (candidates for better linters/formatters/automation), not part of the feature PR. `tmp/` is gitignored; still never force-add it.
+
+### 6. Push + create PR
+
+Depends on: step 5 succeeded (`bin/ci` exit 0).
 
 Follow the user’s creating-pull-requests protocol: status/diff/log/`git diff origin/main...HEAD`, push `-u` if needed, then `gh pr create` with HEREDOC:
 
@@ -100,12 +143,13 @@ Follow the user’s creating-pull-requests protocol: status/diff/log/`git diff o
 - <1–3 bullets: why this ships>
 
 ## Test plan
+- [ ] Local `bin/ci` passed
 - [ ] <gates / Playwright / manual checks from the feature>
 ```
 
 Base: default branch (`main` unless the repo uses another). Return the PR URL. Optionally paste the URL into STATE handoff and amend only if the user’s amend rules allow; otherwise a tiny follow-up commit is fine if they want STATE updated — default is leave STATE with “PR opened” noted in the chat if already committed.
 
-### 6. Checkout next roadmap branch
+### 7. Checkout next roadmap branch
 
 Depends on: PR URL returned.
 
@@ -119,7 +163,7 @@ git pull origin main
 git checkout -b m{N}/{feature-slug}
 ```
 
-4. Tell the user: PR URL, new branch, next TLC step (usually Specify).
+4. Tell the user: PR URL, new branch, next TLC step (usually Specify). Mention `tmp/ci-failure-log.md` only if entries were appended this run (so the user can skim for automation opportunities).
 
 Branch from updated `main`, not from the just-pushed feature branch (AGENTS.md: one feature per branch). The PR may still be unmerged — that is expected.
 
@@ -129,11 +173,19 @@ Branch from updated `main`, not from the just-pushed feature branch (AGENTS.md: 
 
 User says: "create a PR"
 
-Actions: Confirm branch `m3/agent-voice`; ROADMAP still says PLANNED → mark COMPLETE; refresh Mermaid M3 node; commit docs; merge `origin/main`; push; `gh pr create`; propose `m3/dynamic-prompt-suggestions`; checkout that branch from `main`.
+Actions: Confirm branch `m3/agent-voice`; ROADMAP still says PLANNED → mark COMPLETE; refresh Mermaid M3 node; commit docs; merge `origin/main`; `mise exec -- bin/ci` green; push; `gh pr create`; propose `m3/dynamic-prompt-suggestions`; checkout that branch from `main`.
 
 Result: PR URL + on `m3/dynamic-prompt-suggestions` ready for Specify.
 
-### Example 2: Gates missing
+### Example 2: CI fails then fixed
+
+User says: "ship this feature"
+
+Actions: Steps 0–4 OK; `bin/ci` fails on `Style: Ruby`. Append entry to `tmp/ci-failure-log.md`; fix offenses; commit `fix: rubocop before PR`; re-run `bin/ci` green; push + create PR. Leave the log uncommitted.
+
+Result: Green PR; user can later read `tmp/ci-failure-log.md` for recurring lint pain.
+
+### Example 3: Gates missing
 
 User says: "ship this feature" on a Hotwire UI branch with no Playwright UAT in `validation.md`.
 
@@ -141,11 +193,11 @@ Actions: Stop after step 0. List missing UAT. Do not mark COMPLETE, do not open 
 
 Result: User runs TLC validate / Playwright first.
 
-### Example 3: Dirty unrelated files
+### Example 4: Dirty unrelated files
 
 User says: "open a PR" with feature files plus an unrelated `.env` edit.
 
-Actions: Sync ROADMAP/Mermaid; ask whether to include `.env` (refuse secrets); commit feature + docs only; continue merge/PR/next branch.
+Actions: Sync ROADMAP/Mermaid; ask whether to include `.env` (refuse secrets); commit feature + docs only; merge; `bin/ci`; continue PR/next branch.
 
 Result: Clean PR without secrets.
 
@@ -153,11 +205,15 @@ Result: Clean PR without secrets.
 
 ### Error: Verifier or Playwright UAT missing
 
-Cause: AGENTS.md requires those gates before Complete for UI. Solution: Hand back to `tlc-spec-driven` validate; re-run this skill after evidence exists. Draft PR only if the user explicitly wants a WIP PR — then do not mark COMPLETE.
+Cause: AGENTS.md requires those gates before Complete for UI. Solution: Hand back to `tlc-spec-driven` validate; re-run this skill after evidence exists. Draft PR only if the user explicitly wants a WIP PR — then do not mark COMPLETE. WIP still should not skip step 5 unless the user explicitly waives local CI.
+
+### Error: `bin/ci` failing
+
+Cause: Style, security audit, Brakeman, or tests. Solution: Append to `tmp/ci-failure-log.md`, fix, commit, re-run. Do not push red. If blocked after a reasonable fix attempt, stop and hand the log path to the user.
 
 ### Error: merge conflicts with origin/main
 
-Cause: main moved. Solution: Resolve carefully; run tests; commit merge. If blocked, stop and report conflicted paths — do not force-push.
+Cause: main moved. Solution: Resolve carefully; commit merge; let step 5 prove green. If blocked, stop and report conflicted paths — do not force-push.
 
 ### Error: gh auth or push rejected
 
@@ -165,7 +221,7 @@ Cause: Missing credentials or branch protection. Solution: Stop after explaining
 
 ### Error: no next roadmap item
 
-Cause: ROADMAP has only IDEAS/research or empty queue. Solution: Open the PR anyway; ask the user for the next branch or stop after PR URL.
+Cause: ROADMAP has only IDEAS/research or empty queue. Solution: Open the PR anyway (after green CI); ask the user for the next branch or stop after PR URL.
 
 ## Out of scope
 
@@ -173,3 +229,4 @@ Cause: ROADMAP has only IDEAS/research or empty queue. Solution: Open the PR any
 - Merging the GitHub PR
 - Reviewing the PR (`pr-review`)
 - Force-push, hook skips, or rewriting shared history
+- Committing CI failure logs under `tmp/`
