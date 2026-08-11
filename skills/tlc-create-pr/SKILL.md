@@ -60,7 +60,7 @@ Depends on: step 0 passed.
 
 Update `.specs/project/ROADMAP.md` when status is stale: mark the feature COMPLETE/DONE in the project’s existing vocabulary; refresh milestone Current/Status when the milestone boundary moves. Do not invent milestones or rewrite unrelated sections.
 
-If `.specs/project/STATE.md` or `.specs/STATE.md` has Handoff, refresh what shipped and the proposed next feature (PR URL can be filled after step 6).
+If `.specs/STATE.md` has Handoff, refresh what shipped and the proposed next feature (PR URL can be filled after step 6).
 
 ### 2. Sync Mermaid `/roadmap`
 

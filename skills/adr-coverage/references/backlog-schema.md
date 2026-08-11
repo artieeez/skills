@@ -98,7 +98,7 @@ Generated: {ISO-8601}
 ```json
 {
   "generated_at": "2026-08-01T15:12:00-03:00",
-  "sources": ["docs/adr/", ".specs/project/STATE.md"],
+  "sources": ["docs/adr/", ".specs/STATE.md"],
   "adr_count": 4,
   "gap_count": 1,
   "skill_covered_count": 3,
