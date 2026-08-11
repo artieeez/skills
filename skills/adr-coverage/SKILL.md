@@ -60,7 +60,7 @@ When the user asks for coverage / "are we missing ADRs" / after Design scan / af
 1. Ensure init has been done (`.coverage/` exists or run Init).
 2. Collect sources:
    - All `docs/adr/*.md` except `BACKLOG.md`
-   - `.specs/STATE.md` and `.specs/project/STATE.md` Decisions (if present)
+   - `.specs/STATE.md` Decisions (if present)
    - Feature `design.md` / `context.md` / TDD / PRD paths in the current conversation
    - Installed skills: scan `~/.cursor/skills/*/SKILL.md` (and project `.cursor/skills` / `.claude/skills` if present). Snapshot names + one-line purpose into `.coverage/skills-snapshot.md`
 3. Classify each candidate per `references/classify.md` into exactly one bucket:
