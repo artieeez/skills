@@ -1,6 +1,6 @@
 ---
 name: tlc-create-pr
-description: Closes out a TLC roadmap feature by syncing ROADMAP and Mermaid /roadmap, merging main, running local bin/ci (fix-and-log failures to tmp/), opening a GitHub PR only when CI is green, then checking out the next m{N}/feature-slug branch. Use when the user says "create a PR", "open a PR", "open pr for this", "ship this feature", "PR this", "pr it", or "finish with a PR" on a repo that uses .specs/project/ROADMAP.md and AGENTS branch naming. Do NOT use for reviewing PRs (use pr-review), addressing review comments, fixing CI on an existing PR, or commits that are not meant to open a pull request.
+description: Closes out a TLC roadmap feature by syncing ROADMAP and Mermaid /roadmap, merging main, running local bin/ci (fix-and-log failures to tmp/), opening a GitHub PR only when CI is green, then checking out the next m{N}/feature-slug branch. Use when the user says "create a PR", "open a PR", "open pr for this", "ship this feature", "PR this", "pr it", or "finish with a PR" on a repo that uses .specs/project/ROADMAP.md and TLC branch naming. Do NOT use for reviewing PRs (use pr-review), addressing review comments, fixing CI on an existing PR, or commits that are not meant to open a pull request.
 license: CC-BY-4.0
 metadata:
   author: Artur Webber
@@ -16,8 +16,9 @@ Sequential handoff after `tlc-spec-driven` Execute: keep ROADMAP honest, prove l
 | Skill | Relationship |
 | --- | --- |
 | `tlc-spec-driven` | Feature work and Verifier belong there. This skill only ships and hands off. |
+| `tlc-branching` | Owns the `m{N}/{feature-slug}` conventions, branch naming/validation, and the session-rename flow — use it in steps 0, 2, and 7. |
 | `pr-review` | Reviews an existing PR — opposite direction. |
-| Project `AGENTS.md` | Authoritative for `m{N}/{feature-slug}`, Playwright UAT, and local Ruby (`mise`). |
+| Project `AGENTS.md` | Still authoritative for project gates (e.g. Playwright UAT) and local tooling (`mise`). Branch naming is handled by `tlc-branching`, not AGENTS.md. |
 
 ## Critical rules
 
@@ -49,7 +50,7 @@ TLC Create PR:
 
 Validation: know the feature slug and that completion claims are honest.
 
-1. Resolve feature from branch name (`m{N}/{slug}`), `.specs/features/<slug>/`, and STATE handoff.
+1. Resolve feature from branch name (`m{N}/{slug}` — validate via `tlc-branching`), `.specs/features/<slug>/`, and STATE handoff.
 2. If the user (or you) would mark it Complete and the surface is browser UI: confirm Verifier/Playwright evidence exists (e.g. `validation.md`). If missing → **stop**, list what’s missing, do not open a “done” PR.
 
 On failure: stop and report. Do not merge or push yet.
@@ -153,7 +154,7 @@ Base: default branch (`main` unless the repo uses another). Return the PR URL. O
 
 Depends on: PR URL returned.
 
-1. Propose next work from ROADMAP (+ STATE): first PLANNED/ASAP/incomplete item in milestone order; slug from `.specs/features/<slug>/` when present; branch `m{N}/{feature-slug}` per AGENTS.md.
+1. Propose next work from ROADMAP (+ STATE): first PLANNED/ASAP/incomplete item in milestone order; slug from `.specs/features/<slug>/` when present; branch `m{N}/{feature-slug}` per `tlc-branching`.
 2. If two+ ASAP items or unclear → ask before checkout.
 3. When clear or confirmed:
 
@@ -165,7 +166,7 @@ git checkout -b m{N}/{feature-slug}
 
 4. Tell the user: PR URL, new branch, next TLC step (usually Specify). Mention `tmp/ci-failure-log.md` only if entries were appended this run (so the user can skim for automation opportunities).
 
-Branch from updated `main`, not from the just-pushed feature branch (AGENTS.md: one feature per branch). The PR may still be unmerged — that is expected.
+Branch from updated `main`, not from the just-pushed feature branch (`tlc-branching`: one feature per branch). The PR may still be unmerged — that is expected. After checking out the next branch, rename the session per `tlc-branching` so it tracks the new milestone/feature.
 
 ## Examples
 
@@ -173,7 +174,7 @@ Branch from updated `main`, not from the just-pushed feature branch (AGENTS.md: 
 
 User says: "create a PR"
 
-Actions: Confirm branch `m3/agent-voice`; ROADMAP still says PLANNED → mark COMPLETE; refresh Mermaid M3 node; commit docs; merge `origin/main`; `mise exec -- bin/ci` green; push; `gh pr create`; propose `m3/dynamic-prompt-suggestions`; checkout that branch from `main`.
+Actions: Confirm branch `m3/agent-voice`; ROADMAP still says PLANNED → mark COMPLETE; refresh Mermaid M3 node; commit docs; merge `origin/main`; `mise exec -- bin/ci` green; push; `gh pr create`; propose `m3/dynamic-prompt-suggestions`; checkout that branch from `main`; rename session.
 
 Result: PR URL + on `m3/dynamic-prompt-suggestions` ready for Specify.
 
