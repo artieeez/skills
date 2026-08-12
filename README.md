@@ -22,8 +22,8 @@ npx skills add artieeez/skills --skill adr-coverage -g -a cursor -y
 | --- | --- |
 | [adr-coverage](skills/adr-coverage) | ADR coverage map + backlog; Design→Tasks hard-stop when gaps are missing. Hands off writing to `create-adr`. |
 | [artr-platform-ops](skills/artr-platform-ops) | Diagnose the artr personal platform (Argo CD, kubectl logs/events, deploy GitHub Actions, OCI/kube reachability). Read-only by default. |
-| [tlc-create-pr](skills/tlc-create-pr) | After a TLC feature: sync ROADMAP + Mermaid `/roadmap`, merge `main`, run local `bin/ci` (log failures to `tmp/`), open a GitHub PR only when green, checkout the next roadmap branch. |
 | [principle-tradeoffs](skills/principle-tradeoffs) | On request, reframe A/B/C design options as engineering principles and tradeoffs before you choose. |
+| [roadmap](skills/roadmap) | The TLC feature lifecycle: branch `m{N}/{feature-slug}`, rename the session, close out ROADMAP + Mermaid /roadmap, pass `bin/ci`, open the PR, land on the next branch. |
 
 ## License
 
