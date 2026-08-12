@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>tlc-spec-driven × opencode plugin — plan</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --fg: #e6edf3;
+    --muted: #8b949e;
+    --accent: #f0a13b;
+    --accent2: #7ee787;
+    --accent3: #79c0ff;
+    --danger: #ff7b72;
+    --code-bg: #161b22;
+    --border: #30363d;
+    --card: #161b22;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+    overflow: hidden;
+  }
+  .deck { height: 100vh; }
+  .slide {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    padding: 6vh 9vw;
+    overflow-y: auto;
+  }
+  .slide.active { display: flex; }
+  .slide-title {
+    font-size: clamp(1.6rem, 4.2vw, 3rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.1em;
+  }
+  .slide-title .tag {
+    display: inline-block;
+    font-size: 0.5em;
+    font-weight: 600;
+    color: var(--bg);
+    background: var(--accent);
+    border-radius: 999px;
+    padding: 0.2em 0.8em;
+    vertical-align: middle;
+    margin-left: 0.5em;
+  }
+  .lead { font-size: clamp(1.05rem, 2.2vw, 1.45rem); color: var(--muted); max-width: 60ch; }
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent3);
+    margin: 1.4em 0 0.4em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  p, li { font-size: clamp(0.98rem, 1.9vw, 1.2rem); }
+  ul, ol { padding-left: 1.4em; }
+  li { margin: 0.35em 0; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 2vw; margin-top: 1em; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2em 1.4em;
+  }
+  .card h4 { color: var(--fg); font-size: 1rem; margin-bottom: 0.5em; }
+  code, pre {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Cascadia Mono", monospace;
+    font-size: 0.9em;
+  }
+  p code, li code {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 0.1em 0.35em;
+    color: var(--accent2);
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1em 1.2em;
+    overflow-x: auto;
+    line-height: 1.5;
+    margin-top: 0.8em;
+  }
+  pre code { color: var(--fg); }
+  .good { color: var(--accent2); font-weight: 700; }
+  .bad { color: var(--danger); font-weight: 700; }
+  .hl { color: var(--accent); font-weight: 700; }
+  .hlb { color: var(--accent3); font-weight: 700; }
+  .strike { text-decoration: line-through; color: var(--muted); }
+  .foot {
+    position: fixed; bottom: 1.4em; left: 0; right: 0;
+    display: flex; justify-content: space-between;
+    padding: 0 9vw;
+    font-size: 0.8rem; color: var(--muted);
+  }
+  #counter { letter-spacing: 0.08em; }
+  .big {
+    font-size: clamp(1.4rem, 4.5vw, 3.4rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+  .center { text-align: center; align-items: center; }
+  table { border-collapse: collapse; }
+  th, td { text-align: left; }
+  @media (max-width: 760px) { .cols { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="deck">
+
+  <!-- 0: title -->
+  <section class="slide active center">
+    <div class="big">tlc-spec-driven × opencode<br>a plugin plan</div>
+    <p class="lead" style="margin-top:1.2em">Session naming · branch conventions · worktree automation</p>
+    <p class="lead" style="margin-top:0.5em; font-size:0.95rem;">Decisions locked. Scope: opencode only.</p>
+  </section>
+
+  <!-- 1: the itch -->
+  <section class="slide">
+    <div class="slide-title">The itch<span class="tag">why</span></div>
+    <p>When working with <code>tlc-spec-driven</code>, each feature starts on a new branch:</p>
+    <pre><code>git checkout -b m2/feature-slug</code></pre>
+    <ul>
+      <li>opencode auto-names sessions: <code>"Passenger and payments implementation"</code> or worse, <span class="hl">generic slugs</span>.</li>
+      <li>You can't tell which session belongs to which branch.</li>
+      <li><span class="hlb">Idea:</span> the session should just <span class="hl">be named the branch</span> — and know the branch conventions.</li>
+    </ul>
+  </section>
+
+  <!-- 2: locked decisions -->
+  <section class="slide">
+    <div class="slide-title">Locked decisions<span class="tag">done</span></div>
+    <div class="cols">
+      <div class="card">
+        <h4>Architecture</h4>
+        <ul>
+          <li class="good">opencode only · npm plugin</li>
+          <li class="good">Conventions: JSONC canonical — removed from AGENTS.md</li>
+          <li class="good">Companion skill <code>tlc-branching</code> ships in repo, installed via postinstall</li>
+          <li>Rename via <code>client.session.update()</code>, skill-gated</li>
+          <li>Worktree: explicit tool · sibling dirs</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Out of scope</h4>
+        <ul>
+          <li class="bad">Direct sqlite queries</li>
+          <li class="bad">Cursor / other IDE ports</li>
+          <li class="bad">Auto-spawn worktrees (explicit only for now)</li>
+        </ul>
+      </div>
+    </div>
+    <h3>Repo built: <code>~/Documents/opencode-tlc-spec-driven</code></h3>
+    <p><code>tlc_branch</code> + <code>tlc_worktree</code> tools · rename hook · JSONC config · skill-gated scope · 9 tests green</p>
+  </section>
+
+  <!-- 3: why the plugin path -->
+  <section class="slide">
+    <div class="slide-title">Why the plugin, not the DB<span class="tag">decided</span></div>
+    <div class="card">
+      <p class="hlb">Renaming through the running server is the official path:</p>
+      <ul>
+        <li>No cache fights — direct writes get clobbered by the server's in-memory rows and auto-title.</li>
+        <li>TUI updates live — no restart.</li>
+        <li>Version-safe — no dependency on the internal schema.</li>
+        <li>Extensible — the same plugin can add tools and conventions, not just a rename.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 4: plugin mechanics -->
+  <section class="slide">
+    <div class="slide-title">Plugin mechanics — confirmed<span class="tag">verified</span></div>
+    <p>Checked against installed <code>@opencode-ai/plugin@1.18.15</code> + SDK:</p>
+    <h3>Hook — fires after every tool call, gives us the session</h3>
+    <pre><code>"tool.execute.after": async ({ tool, sessionID, args }) => {
+  if (tool === "bash" && /git (checkout -b|switch -c)/.test(args.command)) {
+    const branch = args.command.match(/([^\s]+)$/)[1];
+    await client.session.update({ path: { id: sessionID },
+                                  body: { title: branch } });
+  }
+}</code></pre>
+    <p><code class="hlb">sessionID</code> and <code>client.session.update</code> both verified in the type defs.</p>
+  </section>
+
+  <!-- 5: gotcha -->
+  <section class="slide">
+    <div class="slide-title">The one gotcha<span class="tag">careful</span></div>
+    <div class="card">
+      <p>opencode emits <code>vcs.branch.updated</code> on <span class="hl">any</span> branch change (including when <em>you</em> type the command in the terminal)…</p>
+      <p style="margin-top:0.8em;">…but that event carries <span class="bad">no sessionID</span>.</p>
+    </div>
+    <h3>Consequence</h3>
+    <ul>
+      <li>The rename hook reliably catches <span class="hlb">agent-run</span> <code>git checkout -b</code> — exactly the tlc-spec-driven flow.</li>
+      <li>Terminal-typed branch switches are <em>not</em> renameable this way.</li>
+    </ul>
+  </section>
+
+  <!-- 6: the vision -->
+  <section class="slide">
+    <div class="slide-title">The plugin — full scope<span class="tag">vision</span></div>
+    <p class="lead">Not just a renamer — a <span class="hl">whole plugin centered on tlc-spec-driven</span>.</p>
+    <div class="cols">
+      <div class="card">
+        <h4>1 · Convention holder</h4>
+        <p>Parameters in <code>.opencode/tlc.jsonc</code> (single source). <span class="good">Conventions removed from AGENTS.md</span> — the how-to lives in the companion skill.</p>
+      </div>
+      <div class="card">
+        <h4>2 · <code>tlc_branch</code> tool</h4>
+        <p><span class="hlb">Built.</span> Generates / validates <code>m{N}/{feature-slug}</code>; the skill tells the agent to call it.</p>
+      </div>
+      <div class="card">
+        <h4>3 · Session rename</h4>
+        <p><span class="hlb">Built.</span> <code>tool.execute.after</code> → session title = branch, gated to sessions that loaded a tlc skill.</p>
+      </div>
+      <div class="card">
+        <h4>4 · Worktree tool</h4>
+        <p><span class="hlb">Scaffolded.</span> Explicit <code>tlc_worktree</code> tool, sibling dir, session fork. Auto-spawn intentionally deferred.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7: worktree detail -->
+  <section class="slide">
+    <div class="slide-title">Worktree automation — shape &amp; decisions<span class="tag">locked</span></div>
+    <ul>
+      <li><span class="good">Explicit tool</span> (<code>tlc_worktree</code>) — no auto-spawn. The skill teaches when to call it.</li>
+      <li><span class="good">Sibling directory</span> — worktree lives next to the repo, not inside it.</li>
+      <li><span class="good">Branch naming</span> — skill proposes slug from the spec, tool validates/assembles.</li>
+    </ul>
+    <div class="card" style="margin-top:1.2em;">
+      <h4>Still open (worktree)</h4>
+      <ul>
+        <li>Launching a terminal into the new worktree (desktop/TUI specifics)</li>
+        <li>Session fork → new terminal handoff details</li>
+        <li>Cleanup when a worktree session ends</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 8: building & installing -->
+  <section class="slide">
+    <div class="slide-title">Install &amp; scoping<span class="tag">decided</span></div>
+    <h3>Distribution</h3>
+    <pre><code># npm — default = project config; --global for global
+opencode plugin opencode-tlc-spec-driven
+
+# postinstall places the tlc-branching skill into ~/.agents/skills/
+# (override: TLC_SKILL_DIR)</code></pre>
+    <h3>"Only fires with tlc-spec-driven" — skill-gated scoping</h3>
+    <ul>
+      <li>Tools fire only when called (explicit).</li>
+      <li>Rename hook watches the <code>skill</code> tool: once <code>tlc-branching</code>/<code>tlc-spec-driven</code> loads in a session, <code>rename.scope: "skill-gated"</code> activates for it.</li>
+    </ul>
+    <div class="card" style="margin-top:1em;">
+      <h4>Desktop app</h4>
+      <p class="good">Plugins are server-side; desktop uses the same local server/config/session DB. Rename reflects everywhere.</p>
+    </div>
+  </section>
+
+  <!-- 9: next steps -->
+  <section class="slide">
+    <div class="slide-title">Tomorrow — continue here<span class="tag">plan</span></div>
+    <ol>
+      <li><span class="hlb">Strip conventions from real AGENTS.md files</span> — delete the branching section; point at the <code>tlc-branching</code> skill.</li>
+      <li><span class="hlb">Publish &amp; install</span> — npm publish, then <code>opencode plugin opencode-tlc-spec-driven</code> in a tlc project.</li>
+      <li><span class="hlb">Validate skill-gating live</span> — confirm rename fires only after the skill loads.</li>
+      <li><span class="hlb">Finish worktree</span> — terminal launch + cleanup; answer the 3 open items.</li>
+      <li><span class="hlb">Align tlc-create-pr</span> — it still cites AGENTS.md as authoritative for <code>m{N}/{feature-slug}</code>.</li>
+    </ol>
+    <div class="card" style="margin-top:1.2em;">
+      <h4>Key facts to re-anchor</h4>
+      <p>Rename via <code>client.session.update()</code> · hook <code>tool.execute.after</code> gives <code>sessionID</code> · <code>vcs.branch.updated</code> has no sessionID · JSONC canonical · skill-gated · no direct sqlite · opencode only.</p>
+    </div>
+  </section>
+
+</div>
+
+<div class="foot">
+  <span><span class="dot">⬤</span> tlc-spec-driven × opencode plugin — session naming + branching + worktrees</span>
+  <span id="counter">1 / 10</span>
+</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll(".slide"));
+  let cur = 0;
+  function show(i) {
+    cur = (i + slides.length) % slides.length;
+    slides.forEach((s, idx) => s.classList.toggle("active", idx === cur));
+    document.getElementById("counter").textContent = (cur + 1) + " / " + slides.length;
+  }
+  addEventListener("keydown", (e) => {
+    if (["ArrowRight", "ArrowDown", "PageDown", " ", "Enter"].includes(e.key)) { e.preventDefault(); show(cur + 1); }
+    if (["ArrowLeft", "ArrowUp", "PageUp"].includes(e.key)) { e.preventDefault(); show(cur - 1); }
+    if (e.key === "Home") show(0);
+    if (e.key === "End") show(slides.length - 1);
+  });
+  addEventListener("click", () => show(cur + 1));
+  show(0);
+</script>
+</body>
+</html>
