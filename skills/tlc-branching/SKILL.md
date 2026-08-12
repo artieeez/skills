@@ -1,6 +1,6 @@
 ---
 name: tlc-branching
-description: Branching conventions and worktree workflow for tlc-spec-driven features: create, validate, and check out m{N}/{feature-slug} branches, decide whether to work in a git worktree, and keep the session name in sync with the branch. Use when creating, validating, or checking out a feature branch, choosing between worktree and in-repo work, or renaming the session to its branch. Do NOT use for general git tasks, branch names outside the m{N}/{feature-slug} convention, or the tlc-spec-driven Specify/Design/Tasks/Execute workflow itself.
+description: "Branching conventions and worktree workflow for tlc-spec-driven features: create, validate, and check out m{N}/{feature-slug} branches, decide whether to work in a git worktree, and keep the session name in sync with the branch. Use when creating, validating, or checking out a feature branch, choosing between worktree and in-repo work, or renaming the session to its branch. Do NOT use for general git tasks, branch names outside the m{N}/{feature-slug} convention, or the tlc-spec-driven Specify/Design/Tasks/Execute workflow itself."
 license: CC-BY-4.0
 metadata:
   author: Artur Webber
