@@ -149,7 +149,7 @@
         <ul>
           <li class="good">opencode only · npm plugin</li>
           <li class="good">Conventions: JSONC canonical — removed from AGENTS.md</li>
-          <li class="good">Companion skill <code>tlc-branching</code> ships in repo, installed via postinstall</li>
+          <li class="good">Companion skills <code>tlc-branching</code> + <code>tlc-create-pr</code> ship in repo, installed via postinstall</li>
           <li>Rename via <code>client.session.update()</code>, skill-gated</li>
           <li>Worktree: explicit tool · sibling dirs</li>
         </ul>
@@ -278,9 +278,9 @@ opencode plugin opencode-tlc-spec-driven
     <ol>
       <li><span class="hlb">Strip conventions from real AGENTS.md files</span> — delete the branching section; point at the <code>tlc-branching</code> skill.</li>
       <li><span class="hlb">Publish &amp; install</span> — npm publish, then <code>opencode plugin opencode-tlc-spec-driven</code> in a tlc project.</li>
-      <li><span class="hlb">Validate skill-gating live</span> — confirm rename fires only after the skill loads.</li>
+      <li><span class="hlb">Validate skill-gating live</span> — confirm rename fires only after a tlc skill loads.</li>
       <li><span class="hlb">Finish worktree</span> — terminal launch + cleanup; answer the 3 open items.</li>
-      <li><span class="hlb">Align tlc-create-pr</span> — it still cites AGENTS.md as authoritative for <code>m{N}/{feature-slug}</code>.</li>
+      <li class="good">Done: <code>tlc-create-pr</code> migrated into the plugin repo as a companion skill (postinstall installs both skills).</li>
     </ol>
     <div class="card" style="margin-top:1.2em;">
       <h4>Key facts to re-anchor</h4>
