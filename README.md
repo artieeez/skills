@@ -24,7 +24,6 @@ npx skills add artieeez/skills --skill adr-coverage -g -a cursor -y
 | [artr-platform-ops](skills/artr-platform-ops) | Diagnose the artr personal platform (Argo CD, kubectl logs/events, deploy GitHub Actions, OCI/kube reachability). Read-only by default. |
 | [playwright-cli-memory](skills/playwright-cli-memory) | Append-only syntax memory for playwright-cli; record corrections on every failure or --help lookup so the next session never repeats them. |
 | [principle-tradeoffs](skills/principle-tradeoffs) | On request, reframe A/B/C design options as engineering principles and tradeoffs before you choose. |
-| [roadmap](skills/roadmap) | The TLC feature lifecycle: branch `m{N}/{feature-slug}`, rename the session, close out ROADMAP + Mermaid /roadmap, pass `bin/ci`, open the PR, land on the next branch. |
 
 ## License
 
