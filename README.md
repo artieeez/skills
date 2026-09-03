@@ -22,6 +22,7 @@ npx skills add artieeez/skills --skill adr-coverage -g -a cursor -y
 | --- | --- |
 | [adr-coverage](skills/adr-coverage) | ADR coverage map + backlog; Design→Tasks hard-stop when gaps are missing. Hands off writing to `create-adr`. |
 | [artr-platform-ops](skills/artr-platform-ops) | Diagnose the artr personal platform (Argo CD, kubectl logs/events, deploy GitHub Actions, OCI/kube reachability). Read-only by default. |
+| [lighthouse-chrome-memory](skills/lighthouse-chrome-memory) | Append-only syntax memory for lighthouse / lhci and headless Chrome; record corrections on every failure or --help lookup so the next session never repeats them. |
 | [playwright-cli-memory](skills/playwright-cli-memory) | Append-only syntax memory for playwright-cli; record corrections on every failure or --help lookup so the next session never repeats them. |
 | [principle-tradeoffs](skills/principle-tradeoffs) | On request, reframe A/B/C design options as engineering principles and tradeoffs before you choose. |
 
